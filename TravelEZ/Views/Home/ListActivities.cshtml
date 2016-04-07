@@ -1,0 +1,25 @@
+﻿@{
+    ViewBag.Title = "List Activities";
+}
+
+<h2>All Activities</h2>
+<p id="ActivityID"></p>
+<p id="ActivityLevel"></p>
+<p id="ActivityParentID"></p>
+<p id="ActivityName"></p>
+<button>Get Activities</button>
+
+<script>
+    $(document).ready(function () {
+        $("button").click(function () {
+            $.get("@Url.Action("getActivities", "Home")", function (response) {
+                //response
+                console.log(response);
+                $("ActivityID").text(response.ActivityID);
+                $("ActivityLevel").text(response.ActvityLevel);
+                $("ActivityParentID").text(response.ActivityParentID);
+                $("ActivityName").text(response.ActivityName);
+            });
+        });
+    });
+</script>

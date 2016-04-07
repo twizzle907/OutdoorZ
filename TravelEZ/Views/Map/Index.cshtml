@@ -1,0 +1,280 @@
+﻿
+@{
+    ViewBag.Title = "Map";
+}
+
+<link rel="stylesheet" href="@Url.Content("~/Leaflet/leaflet.css")" />
+
+<h2>Map</h2>
+
+<script src="@Url.Content("~/Leaflet/leaflet.js")"></script>
+<noscript>
+    <h3>Javascript is disabled</h3>
+    <p>Your browser appears to have JavaScript disabled. Unfortunately, OutdoorZ requires Javascript on many of its pages. The site will not function properly without Javascript.</p>
+</noscript>
+
+<div id="mapDiv" style="height: 500px;"></div>
+
+<p id="lat" />
+<p id="lon" />
+<p id="zoom" />
+
+<p><button id="findMe" type="button">Where am I?</button></p>
+
+
+<table id="locationless" border="1">
+    <thead>
+        The following rec areas have no latitude &amp; longitude info in RIDB:
+    </thead>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Address 1</th>
+            <th>Address 2</th>
+            <th>Address 3</th>
+            <th>City</th>
+            <th>State</th>
+            <th>Postal Code</th>
+            <th>Country</th>
+            <th>Find city</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+
+    //At mapDiv's current size (height 500px, width automatic), this is enough to see all 50 real states:
+    var startLocation = [51.28940590271679, -119.00390625];
+    var startZoom = 3;
+
+    //----------Set up the map---------------
+    var map = L.map('mapDiv', {
+        center: startLocation,
+        zoom: startZoom,
+        worldCopyJump: true
+    })
+
+    var osmURL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    L.tileLayer(osmURL,
+        {
+            attribution: '<br />Map tiles &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC BY-SA</a>.<br />Rec area data from <a href="https://ridb.recreation.gov/">Recreation Information Database</a>.<br />City location data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://opendatacommons.org/licenses/odbl/">ODbL</a>.'
+        }).addTo(map);
+
+    L.control.scale({
+        updateWhenIdle: true
+    }).addTo(map);
+
+    //----------Geocoding via Nominatim---------------
+    function geocodingCallback(respo) {
+        console.log(respo);
+        if (respo.length > 1) {
+            var latitude = respo[0].lat;
+            var longitude = respo[0].lon;
+
+            var marker = L.marker([latitude, longitude], {
+                title: respo[1],
+                alt: "Map marker for " + respo[1],
+                riseOnHover: true
+            });
+            marker.addTo(map);
+            marker.bindPopup(respo[1]);
+            marker.openPopup();
+
+            var southWestBound = [respo[0].boundingbox[0], respo[0].boundingbox[2]];
+            var northEastBound = [respo[0].boundingbox[1], respo[0].boundingbox[3]];
+            var boundingBox = [southWestBound, northEastBound];
+            map.fitBounds(boundingBox);
+        }
+    }
+
+    //----------Get data from RIDB and put it in the map or table---------------
+    
+    function addressFoundCallback(respo) {
+        var activityName = respo.passback;
+
+        respo.RECDATA.forEach(function (respo) {
+            var row = document.getElementById(respo.RecAreaID + "row");
+            var addr1Cell = row.insertCell(2);
+            var addr2Cell = row.insertCell(3);
+            var addr3Cell = row.insertCell(4);
+            var cityCell = row.insertCell(5);
+            var stateCell = row.insertCell(6);
+            var zipCell = row.insertCell(7);
+            var countryCell = row.insertCell(8);
+
+            var addr1 = html_entity_decode(respo.RecAreaStreetAddress1);
+            var addr2 = html_entity_decode(respo.RecAreaStreetAddress2);
+            var addr3 = html_entity_decode(respo.RecAreaStreetAddress3);
+            var city = html_entity_decode(respo.City);
+            var state = html_entity_decode(respo.AddressStateCode);
+            var zip = respo.PostalCode; //html_entity_decode(respo.PostalCode);
+            var country = html_entity_decode(respo.AddressCountryCode);
+
+            addr1Cell.appendChild(document.createTextNode(addr1));
+            addr2Cell.appendChild(document.createTextNode(addr2));
+            addr3Cell.appendChild(document.createTextNode(addr3));
+            cityCell.appendChild(document.createTextNode(city));
+            stateCell.appendChild(document.createTextNode(state));
+            zipCell.appendChild(document.createTextNode(zip));
+            countryCell.appendChild(document.createTextNode(country));
+
+            if ((city != null && city.trim().length > 0) && (state != null && state.trim().length > 0)) {
+                var buttonCell = row.insertCell(9);
+                var button = document.createElement("button");
+                button.type = "button";
+                button.value = "Find city";
+                button.appendChild(document.createTextNode("Find city"));
+                button.onclick = function () {
+                    //var query = respo.RecAreaStreetAddress1 + " " + respo.RecAreaStreetAddress2 + " " + respo.RecAreaStreetAddress3 + " " + respo.City + " " + respo.AddressStateCode + " " + respo.AddressCountryCode + " " + respo.PostalCode; //I was finding very few results when I used the full address, so for now we use only city and state. --James
+                    var query = city + ", " + state;
+
+                    var url = "@Url.Action("getCoordinatesFromAddress", "Home", new { QUERY = "supercalifragilisticexpialidocious", LIMIT = "1", PASSBACK = "antidisestablishmentarianism" } )";
+
+                    var passback = activityName + " is somewhere in " + city + ", " + state;
+
+                    url = url.replace("supercalifragilisticexpialidocious", query);
+                    url = url.replace("antidisestablishmentarianism", passback);
+                    //url = url.replace(/&amp;/g, "&");
+                    url = html_entity_decode(url);
+                    console.log(url);
+                    $.get(url, geocodingCallback);
+                }
+                buttonCell.appendChild(button);
+            }
+        })
+    }
+
+    var max = 3500; //This number gets changed based on RIDB's response. 3500 is thus meaningless now; it just has to be anything above totalSoFar.
+    var totalSoFar = 0;
+    function recListCallback(respo) {
+        if (totalSoFar < max) {
+            
+            var url = "@Url.Action("getRecList", "Home", new { OFFSET = "offset" } )"
+            url = html_entity_decode(url);
+            url = url.replace("offset", totalSoFar);
+
+            $.get(url, recListCallback);
+            
+            if (respo != null) {
+                max = respo.METADATA.RESULTS.TOTAL_COUNT;
+                totalSoFar += respo.METADATA.RESULTS.CURRENT_COUNT;
+                //console.log(respo);
+                respo.RECDATA.forEach(function (respo) {
+                    var latitude = respo.RecAreaLatitude;
+                    //console.log("Latitude:" + latitude);
+                    var longitude = respo.RecAreaLongitude;
+                    //console.log("Longitude:" + longitude);
+
+                    var name = html_entity_decode(respo.RecAreaName);
+
+                    if (latitude != '' && longitude != '') { //Not all rec areas have latitude & longitude in the RIDB database
+                        var marker = L.marker([latitude,longitude], {
+                            title: name,
+                            alt: "Map marker for " + name,
+                            riseOnHover: true
+                        });
+                        marker.addTo(map);
+                        marker.bindPopup( respo.RecAreaName );
+                    } else {
+                        var table = document.getElementById("locationless");
+                        var body = table.tBodies[0];
+                        var row = body.insertRow(0);
+                        var idCell = row.insertCell(0);
+                        var nameCell = row.insertCell(1);
+
+                        row.setAttribute( "id", respo.RecAreaID + "row" );
+
+                        idCell.appendChild(document.createTextNode(respo.RecAreaID));
+                        nameCell.appendChild(document.createTextNode(name));
+
+                        var url = "@Url.Action("GetRecAreaAddresses", "Home", new { ID = "supercalifragilisticexpialidocious", PASSBACK = "antidisestablishmentarianism" })";
+
+                        var passback = name;
+
+                        url = url.replace("supercalifragilisticexpialidocious", respo.RecAreaID);
+                        url = url.replace("antidisestablishmentarianism", passback);
+                        //url = url.replace(/&amp;/g, "&");
+                        url = html_entity_decode(url);
+
+                        $.get(url, addressFoundCallback);
+                    }
+                });
+
+            }
+        } else {
+
+            /*listOfStates.sort();
+            console.log(listOfStates);
+            var statesDropDown = document.getElementById("states");
+            listOfStates.forEach(function (state) {
+                if (state != "") {
+                    var option = document.createElement("option");
+                    option.text = state;
+                    statesDropDown.add(option);
+                }
+            })
+            statesDropDown.disabled = false;*/
+        }
+    }
+
+    $(document).ready(function () {
+        recListCallback(null);
+    });
+
+    //----------Miscellaneous---------------
+    function handleMove(event) {
+        var center = map.getCenter();
+        var zoom = map.getZoom();
+
+        document.getElementById("lat").innerHTML = "Latitude = " + center.lat;
+        document.getElementById("lon").innerHTML = "Longitude = " + center.lng;
+        document.getElementById("zoom").innerHTML = "Zoom = " + zoom;
+    }
+
+    map.on('moveend', handleMove);
+
+    $('#findMe').click(function () {
+        map.locate({
+            setView: true,
+            enableHighAccuracy: true
+        });
+    })
+
+    var userLocationCircle = L.circle([0, 0], 0);
+    userLocationCircle.addTo(map);
+    map.on('locationfound', function (event) {
+        var latitude = event.latlng.lat;
+        var longitude = event.latlng.lng;
+
+        /*var circle = L.circle([latitude, longitude], event.accuracy);
+        circle.addTo(map);*/
+        userLocationCircle.setLatLng([latitude, longitude]);
+        userLocationCircle.setRadius(event.accuracy / 2); //I interpret 'accuracy' as the circle's diameter, not its radius, thus the division by 2. --James
+
+        var marker = L.marker([latitude, longitude], {
+            title: "Your location",
+            alt: "Map marker for your location",
+            riseOnHover: true
+        });
+        marker.addTo(map);
+        marker.bindPopup("You are within this circle");
+        marker.openPopup();
+    })
+
+    map.on('locationerror', function (event) {
+        alert(event.message);
+    })
+
+    
+    function html_entity_decode(str) {
+        /* http://javascripts.com
+        Created by: Ultimater */
+
+        var ta = document.createElement("textarea");
+        ta.innerHTML = str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return ta.value;
+    }
+</script>

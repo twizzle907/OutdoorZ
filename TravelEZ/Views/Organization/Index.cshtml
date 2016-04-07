@@ -1,0 +1,69 @@
+﻿@model IEnumerable<TravelEZ.Models.Organization>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.OrgName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.OrgAbbrevName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.OrgURLAddress)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.OrgURLText)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.OrgImageURL)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.OrgType)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.OrgJurisdictionType)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.OrgName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.OrgAbbrevName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.OrgURLAddress)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.OrgURLText)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.OrgImageURL)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.OrgType)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.OrgJurisdictionType)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.OrgID }) |
+            @Html.ActionLink("Details", "Details", new { id=item.OrgID }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.OrgID })
+        </td>
+    </tr>
+}
+
+</table>

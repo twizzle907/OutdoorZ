@@ -1,0 +1,74 @@
+﻿@model PagedList.IPagedList<TravelEZ.Models.Activity>
+@using PagedList.Mvc;
+<link href="~/Content/PagedList.css" rel="stylesheet" type="text/css" />
+
+@{
+    ViewBag.Title = "Activities";
+}
+
+<h2>Activities</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+
+    @using (Html.BeginForm("Index", "Activity", FormMethod.Get))
+    {
+    <p>
+        Name: @Html.TextBox("name", ViewBag.CurrentFilter as string) <br />
+        Location: @Html.TextBox("location") <br />
+        <input type="submit" value="Search" />
+    </p>
+    }
+@using (Html.BeginForm("Index", "Activity", FormMethod.Get))
+{
+        <p>
+            Filter by Activity Level:
+            @Html.DropDownList("minLevelString", (SelectListItem[])ViewBag.Acts)
+            @Html.ValidationMessageFor(model => model.FirstOrDefault().ActivityLevel, "", new { @class = "text-danger" })
+            <input type="submit" value="Filter" />
+        </p>
+    }
+    @*</p>*@
+    <table class="table">
+        <tr>
+            <th>
+                @Html.ActionLink("Name", "Index", new { sortOrder = ViewBag.NameSortParm, currentFilter = ViewBag.CurrentFilter })
+            </th>
+            <th>
+                Location
+            </th>
+            <th>
+                @Html.ActionLink("Activity Level", "Index", new { sortOrder = ViewBag.LevelSortParm, currentFilter = ViewBag.CurrentFilter })
+            </th>
+        </tr>
+
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Location)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ActivityLevel)
+                </td>
+                <td>
+                    @Html.ActionLink("Edit", "Edit", new { id = item.ID }) |
+                    @Html.ActionLink("Details", "Details", new { id = item.ID }) |
+                    @Html.ActionLink("Delete", "Delete", new { id = item.ID })
+                </td>
+            </tr>
+        }
+
+    </table>
+    <br />
+    Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+    @Html.PagedListPager(Model, page => Url.Action("Index",
+    new { page, sortOrder = ViewBag.CurrentSort, currentFilter = ViewBag.CurrentFilter }))
+
+    Results per page: @Html.DropDownList("ResultString", (SelectListItem[])ViewBag.Pages)
+    <input type="submit" value="Select" />
+<br />

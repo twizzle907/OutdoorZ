@@ -1,0 +1,74 @@
+﻿@model TravelEZ.Models.Organization
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Organization</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgAbbrevName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgAbbrevName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgURLAddress)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgURLAddress)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgURLText)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgURLText)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgImageURL)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgImageURL)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgType)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgType)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgJurisdictionType)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgJurisdictionType)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.OrgID }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

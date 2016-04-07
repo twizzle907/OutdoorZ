@@ -1,0 +1,71 @@
+﻿@{
+    ViewBag.Title = "SearchResults";
+}
+
+<h2>SearchResults</h2>
+
+<p>Your search criteria is:</p>
+
+<!--Selection Text-->
+<p id="activityID"></p>
+<p id="activityName"></p>
+<p id="organizationID"></p>
+<p id="organizationName"></p>
+<p id="state"></p>
+
+
+
+<script>
+    function activityCallback(respo) {
+        console.log(respo);
+        if( respo != null && respo.length > 0 ) {
+            document.getElementById("activityName").innerHTML = "Activity Name: " + respo[0].ActivityName;
+        }
+    }
+
+    function organizationCallback(respo) {
+        console.log(respo);
+        if( respo != null && respo.length > 0 ) {
+            document.getElementById("organizationName").innerHTML = "Organization Name: " + respo[0].OrgName;
+        }
+    }
+
+    function html_entity_decode(str) {
+        /* http://javascripts.com
+        Created by: Ultimater */
+
+        var ta = document.createElement("textarea");
+        ta.innerHTML = str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return ta.value;
+    }
+
+    $(document).ready(function ()
+    {
+        if( "@ViewBag.activity" != "invalid" ) {
+            document.getElementById("activityID").innerHTML = "Activity ID: " + "@ViewBag.activity";
+
+            var url = "@Url.Action("getActivity", "Home", new { ID = "supercalifragilisticexpialidocious" } )"
+            url = html_entity_decode(url);
+            url = url.replace("supercalifragilisticexpialidocious", @ViewBag.activity);
+
+            $.get(url, activityCallback);
+        }
+
+        if( "@ViewBag.organization" != "invalid" ) {
+            document.getElementById("organizationID").innerHTML = "Organization ID: " + "@ViewBag.organization";
+
+            var url = "@Url.Action("getOrganization", "Home", new { ID = "supercalifragilisticexpialidocious" } )"
+            url = html_entity_decode(url);
+            url = url.replace("supercalifragilisticexpialidocious", @ViewBag.organization);
+
+            $.get(url, organizationCallback);
+        }
+
+
+        if( "@ViewBag.state" != "invalid" ) {
+            document.getElementById("state").innerHTML = "State Selected: " + "@ViewBag.state";
+        }
+    });
+
+</script>
+

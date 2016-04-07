@@ -1,0 +1,236 @@
+﻿@{
+    ViewBag.Title = "OutdoorZ Home Page";
+}
+
+<div class="jumbotron">
+    <h2>Searching for adventure?</h2>
+    <p>Make your selections below, and let our community be your guide</p>
+    @{
+        ViewBag.Title = "List Activities";
+    }
+
+    <noscript>
+        <h3>Javascript is disabled</h3>
+        <p>Your browser appears to have JavaScript disabled. Unfortunately, OutdoorZ requires Javascript on many of its pages. The site will not function properly without Javascript.</p>
+    </noscript>
+
+
+    @using (Html.BeginForm("SearchResults", "Home", FormMethod.Get))
+    {
+    <!--Drop Down boxes-->
+        <select id="activityDropDown" name="activityDropDown" ;></select>
+        <select id="orgdrop" name="orgDrop" ;></select>
+        <select id="stateDropDown" name="stateDropDown" disabled>
+            <option value="invalid" disabled="disabled" selected="selected">Select a state</option>
+        </select>
+
+    <!--Selection Text-->
+        <p id="activityConfirm">  </p>
+        <div id="selorg"></div>
+        <div id="selstate"></div>
+
+    <!--Buttons-->
+
+        @*Added the argument 'true' to window.location.reload() to make the browser reload the page from the server, not cache. Reason: The state drop-down box is supposed to be disabled until it gets fully populated. It does not get disabled if the browser reloads the page from cache. --James*@
+        <button id="reload" type="button" onclick="window.location.reload( true );">Reset</button>
+
+        <input type='submit' value='Search' id='searchButton' name='searchButton' disabled /> <!--Loads as disabled button, enabled AFTER a selection is made--> //changed from searchResults()
+
+    }
+
+
+
+    <!--Gets the Activities from RIDB and populates the ActivityDropDown-->
+    <script>
+        var activities = Object();
+
+
+
+        $(document).ready(function () {
+            $("#activityDropDown").add(function () {
+                //$("#activity").click(function () {
+                $(this).val('Already chosen').attr('disabled', 'disabled');
+                $.get("@Url.Action("getActivities", "Home")", function (response) {
+                    console.log(response);
+
+                    var activityListItems = '<option selected="selected" value="invalid" disabled="disabled" selected="selected">Select an Activity</option>';
+                    response.RECDATA.forEach(function (r) {
+                        activityListItems += "<option value='" + r.ActivityID + "'>" + r.ActivityName + "</option>";
+                        $("#activityDropDown").html(activityListItems);
+
+
+                    });
+                });
+            });
+        });
+
+        //Read and display selection for ActivityDropDown
+        $(document).ready(function () {
+            $("#activityDropDown").change(function () {
+                var activitySelection = document.getElementById('activityDropDown');
+                var activityText = activitySelection.options[activitySelection.selectedIndex].text;
+                //search.activityText = activityText;//this doesn't do anything at this point
+                console.log(activitySelection);
+                console.log(activityText);
+                document.getElementById("searchButton").disabled = false; //Activates the Search button
+                document.getElementById("activityConfirm").innerHTML = "Activity Selection: " + activityText; //prints on screen after selection
+            });
+        });
+
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $("#rec").click(function () {
+                $(this).val('Already chosen').attr('disabled', 'disabled');
+                var table = document.getElementById("recTable");
+                var body;
+                var row;
+                var rnameCell;
+                var stateCell;
+                $.get("@Url.Action("getRecAreaAddresses", "Home")", function (respo) {
+                    console.log(respo);
+
+                    respo.RECDATA.forEach(function (respo) {
+                        body = table.tBodies[0];
+                        row = body.insertRow(0);
+                        rnameCell = row.insertCell(0);
+                        stateCell = row.insertCell(1);
+
+
+                        console.log(respo.AddressStateCode);
+                        stateCell.appendChild(document.createTextNode(respo.AddressStateCode));
+
+                        //rnameCell.appendChild(document.createTextNode(" "));
+                    });
+                });
+                $.get("@Url.Action("getRecNames","Home")", function (response) {
+                    response.RECDATA.forEach(function (response) {
+                        console.log(response.RecAreaName);
+                        rnameCell.appendChild(document.createTextNode(response.RecAreaName));
+                    });
+                });
+
+            });
+        });
+
+    </script>
+
+
+    @*Ideas for how to get list of states ----  I'm entering this as a comment for quick reference and putting it on the message board in case
+            anyone else finds it useful --James
+        I want to get a list of states from the API because recreation.gov lists a few things that aren't really states but are treated as such;
+            i.e. the Federated States of Micronesia is one 'state'
+        1) Rec area addresses
+            |-Make an empty list of states we've already found
+            |-Loop until we've got all the data (See the Pagination section of https://usda.github.io/RIDB/)
+                |-Get list of rec area addresses from https://ridb.recreation.gov/api/v1/recareaaddresses/
+                |-For each item in the list, look at the AddressStateCode
+                    |-If the AddressStateCode is not in our list of states, add it
+                    |-otherwise ignore it and move on
+        2) Facility addresses - may be more useful, as facilities "can also 'stand on their own' without a parent recreation area"
+            |- Same as above, but get addresses from https://ridb.recreation.gov/api/v1/facilityaddresses/*@
+
+    <!--Populates the stateDropDown dropdown, reads selection, and activates Search button-->
+    <script>
+
+        //I'm hard-coding a list of states so that the user can select one immediately. We still get all the states from RIDB as before, but now it's just in case our hard-coded list gets out of date - new "states" from RIDB will be added at run time.
+        var listOfStates = ["AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MP", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY"];
+        listOfStates.sort(); //Not actually necessary; I'm just making as sure as possible that the list is sorted. Yay paranoia!  --James
+        var statesDropDown = document.getElementById("stateDropDown");
+        listOfStates.forEach(function (state) {
+            if (state != "") {
+                var option = document.createElement("option");
+                option.value = state;
+                option.text = state;
+
+                //if ($("#states").find("option[value=" + state + "]").length == 0) {
+                statesDropDown.add(option);
+                /*} else {
+                    console.log(option + "is already listed");
+                }*/
+            }
+        })
+
+        statesDropDown.disabled = false;
+
+        var max = 3500; //This number gets changed based on RIDB's response. 3500 is thus meaningless now; it just has to be anything above totalSoFar.
+        var totalSoFar = 0;
+
+        function jqueryCallback(respo) {
+            if (totalSoFar < max) {
+                var url = "@Url.Action("getRecAreaAddresses", "Home", new { OFFSET = "offset" } )"
+
+                url = url.replace("offset", totalSoFar);
+
+                $.get(url, jqueryCallback);
+
+                if (respo != null) {
+                    max = respo.METADATA.RESULTS.TOTAL_COUNT;
+                    totalSoFar += respo.METADATA.RESULTS.CURRENT_COUNT;
+
+                    respo.RECDATA.forEach(function (respo) {
+                        if (respo.AddressStateCode.toUpperCase().indexOf("STATE MAPPING BROKEN") === -1 && listOfStates.indexOf(respo.AddressStateCode) === -1) {
+                            listOfStates.push(respo.AddressStateCode);
+                        }
+                    });
+
+                }
+            } else {
+
+                listOfStates.sort();
+                //console.log(listOfStates);
+                //var statesDropDown = document.getElementById("states");
+                listOfStates.forEach(function (state) {
+
+                    if (state != "") {
+                        var option = document.createElement("option");
+                        option.value = state;
+                        option.text = state;
+
+                        if ($("#stateDropDown").find("option[value=" + state + "]").length == 0) {
+                            statesDropDown.add(option);
+                            console.log("Adding new state " + state);
+                        } else {
+                            //console.log(option + "is already listed");
+                        }
+
+                    }
+                })
+            }
+        }
+
+        $(document).ready(function () {
+            jqueryCallback(null);
+
+            $('#stateDropDown').on("change", function () {
+                var selected = $(this).val();
+                $("#selstate").html("State chosen: " + selected);
+                document.getElementById("searchButton").disabled = false; //Activates the Search button
+                //search.selected = selected;
+            })
+        });
+
+    </script>
+
+    <!--Populates the Org Dropdown, reads selection, activates Search button-->
+    <script>
+        $(document).ready(function () {
+            $('#orgdrop').append('<option value="invalid" disabled="disabled" selected="selected">' + "Select an Organization" + '</option>');
+            $.get("@Url.Action("getOrgs", "Home")", function (response) {
+                console.log(response);
+                response.RECDATA.forEach(function (r) {
+                    $('#orgdrop').append('<option value=' + r.OrgID + '>' + r.OrgName + '</option>');
+                    $('#orgdrop').on("change", function () {
+                        var orgSelection = document.getElementById('orgdrop');
+                        var orgText = orgSelection.options[orgSelection.selectedIndex].text;
+                        //search.orgText = orgText;
+                        document.getElementById("searchButton").disabled = false; //Activates the Search button
+                        document.getElementById("selorg").innerHTML = "Organization Selected: " + orgText;
+                    });
+                });
+            });
+        });
+    </script>
+
+</div>

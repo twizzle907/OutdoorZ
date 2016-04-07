@@ -1,0 +1,41 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+    background: #F2FFF2; 
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+
+.navbar-inverse { 
+  background-color: #0d62bf !important; /*Making this green for the Hello World version of our app. No reason other than I like green. Feel free to change it.*/
+  border-color: #080808;
+}
+
+h1{
+    color: #071639;
+}
+
+h2{
+    color: #AA6C39;
+}
+h3{
+    color: #013333;
+}
